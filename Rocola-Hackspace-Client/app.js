@@ -3,6 +3,19 @@
 var express = require('express'),
     swig = require('swig');
 
+// Server Communication with Raspi
+var WebSocketServer = require('ws').Server
+, wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', function connection(ws) {
+    console.log('user has connected');
+    ws.on('message', function incoming(message) {
+        console.log("me has mandado algo : " + message);
+        ws.send('what the fuck');
+    });
+});
+
+// Module dependencies
 // Create server
 var app = express();
 
