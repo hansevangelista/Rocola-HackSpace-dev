@@ -52,16 +52,16 @@ mopidy.on('state:online', function () {
     console.log('state online');
     
     // Default playlist
-    var uri = 'spotify:user:lomejordespotifyenargentina:playlist:1K3CWZMz6B8Q3p4fcEK8UY';
+    // var uri = 'spotify:user:lomejordespotifyenargentina:playlist:1K3CWZMz6B8Q3p4fcEK8UY';
 
-    mopidy.library.lookup(uri).then(function(tracks) {
+    // mopidy.library.lookup(uri).then(function(tracks) {
         
-        mopidy.tracklist.clear();
+    //     mopidy.tracklist.clear();
 
-        mopidy.tracklist.add(tracks);
+    //     mopidy.tracklist.add(tracks);
         
-        mopidy.playback.play();
-    });
+    //     mopidy.playback.play();
+    // });
 });
 
 // Init Soclet.io
@@ -76,6 +76,10 @@ io.on('connection', function (socket) {
 function Player (socket, mopidy) {
     
     socket.on('search', search);
+    socket.on('add', add);
+
+    // get tracklist from server
+    // emit tracklist
     
     function search (text) {
         mopidy.library.search( {any: [text]}, ['spotify:'] )
@@ -99,5 +103,10 @@ function Player (socket, mopidy) {
         }
 
         socket.emit('result', tracks);
+    }
+
+    function add (trackUri) {
+        console.log( "add", trackUri );
+        // add track in serve
     }
 }

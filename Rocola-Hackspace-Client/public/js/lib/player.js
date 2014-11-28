@@ -8,6 +8,11 @@ function Player () {
 
     function result (tracks) {
         console.log( "result", tracks );
+        add(tracks[0]);
+    }
+
+    function add (track) {
+        socket.emit('add', track.uri);
     }
 
     return {
