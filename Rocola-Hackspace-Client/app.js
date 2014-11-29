@@ -7,15 +7,46 @@ var express = require('express'),
 var WebSocketServer = require('ws').Server
 , wss = new WebSocketServer({ port: 8080 });
 
+var Raspi ={
+    socket: null,
+    playing: true,
+    playlist: [
+        {
+            name: "defaultName", 
+            album: "defaultAlbumName", 
+            uri: "spotify://whataasdivdl"
+        }
+    ],
+    current: {
+        name: "defaultTrack", 
+        album: "defaultAlbumNameForTrack", 
+        uri: "spotify://thisIsNameForTrack"
+    }
+};
+
+function serverController (ws){
+    return {
+        updatePlaylist: function(data){
+            data = JSON.stringify(data);
+            ws.send(data);
+        },
+        updateStatus: function(data){
+            data = JSON.stringify(data);
+            ws.send(data);
+        }
+    };
+};
+
 wss.on('connection', function connection(ws) {
+    Raspi.socket = ws;
     console.log('user has connected');
-    ws.on('message', function incoming(message) {
-        console.log("me has mandado algo : " + message);
-        ws.send('what the fuck');
+    var server = serverController(ws);
+    ws.on('message', function incoming(json) {
+        var action = JSON.parse(json);
+        server[action.type](action.data);
     });
 });
 
-// Module dependencies
 // Create server
 var app = express();
 
@@ -70,6 +101,7 @@ var io = require('socket.io')(server);
 io.on('connection', function (socket) {
     
     var player = new Player(socket, mopidy);
+    
 });
 
 // Player

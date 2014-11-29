@@ -2,13 +2,21 @@ var WebSocket = require('ws');
 var ws = new WebSocket('ws://localhost:8080');
 
 ws.on('open', function open() {
-    ws.send('something');
+    var response = {
+        "type": "updatePlaylist",
+        "data": {
+            "playlist": "blablabla this is custom",
+            "track": "lento"
+        }
+    };
+    var data = JSON.stringify(response);
+    ws.send(data);
 });
 
 ws.on('message', function(data) {
     // flags.binary will be set if a binary data is received.
     // flags.masked will be set if the data was masked.
-    console.log("Two-way communication working!" + "  " + data);
+    console.log("Two-way communication working!" + "\n " + data);
 });
 // Module dependencies
 // var express = require('express'),
