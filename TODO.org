@@ -1,0 +1,10 @@
+* Tasks
+** TODO  Implement `addTrack`     <2014-11-28 Fri 20:36>
+Respond to the message of addtrack, and also send a message to webserver playlist has been changed
+ 
+  
+  Link: file:~/Documents/Projects/Rocola-HackSpace/Rocola-Hackspace-Server/app.js::"type":%20"updatePlaylist",
+** TODO  Implement `pauseTrack` and `playTrack`      <2014-11-28 Fri 20:41>
+Should be using mopidy api, and notify the users
+  
+  Link: file:~/Documents/Projects/Rocola-HackSpace/Rocola-Hackspace-Server/app.js::ws.on('message',%20function(data)%20{

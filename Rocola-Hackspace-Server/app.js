@@ -1,5 +1,71 @@
+// Create Mopidy
+var Mopidy = require("mopidy");
+
+var mopidy = new Mopidy({
+    webSocketUrl: "ws://localhost:6680/mopidy/ws/"
+});
+
+// Init Mopidy 
+mopidy.on('state:online', function () {
+    
+    console.log('state online');
+    
+    // Default playlist
+    var uri = 'spotify:user:spotifyenchile:playlist:3aZzYRCQ1Pi3qaPP8H9VTT';
+    
+    mopidy.library.lookup(uri).then(function(tracks) {
+        
+        mopidy.tracklist.clear();
+        
+        mopidy.tracklist.add(tracks);
+        
+        mopidy.tracklist.setConsume(false);
+        mopidy.tracklist.getConsume()
+            .done(function (track) {
+                console.log("consume: " + track) ;
+            });
+
+        mopidy.playback.play();
+    });
+});
+
 var WebSocket = require('ws');
 var ws = new WebSocket('ws://localhost:8080');
+
+function MopidyController ()  {
+    return {
+        defaultList: true,
+        play: function(){
+            // mopidy????play;
+            console.log("asdf");
+        },
+        addTrack: function(data){
+            console.log("lol");
+        },
+        getTrack: function(data){
+            // mopidy.on('event:playbackStateChanged', function (state) {
+            //     console.log("++++++++++++++++++++++++++++++++++");
+            //     console.log("playbackStateChanged: " + JSON.stringify(state.new_state));
+            //     console.log("++++++++++++++++++++++++++++++++++");
+            // });
+
+            // mopidy.on('event:trackPlaybackPaused', function (track){
+            //     console.log("------------------------------------");
+            //     console.log("State: " + JSON.stringify(track,null, 2));
+            //     console.log("------------------------------------");
+            // });
+            // mopidy.on('event:trackPlaybackResumed', function (track){
+            //     console.log("------------------------------------");
+            //     console.log("State: " + JSON.stringify(track,null, 2));
+            //     console.log("------------------------------------");
+            // });
+            
+            // everytime the song changes, the the cotent of all this is evaluated automatically check this so you don't do work in vain
+        }
+    };
+}
+
+var mopidyController = new MopidyController;
 
 ws.on('open', function open() {
     var response = {
@@ -9,101 +75,56 @@ ws.on('open', function open() {
             "track": "lento"
         }
     };
+    
     var data = JSON.stringify(response);
     ws.send(data);
+    console.log("connected");
 });
 
-ws.on('message', function(data) {
-    // flags.binary will be set if a binary data is received.
-    // flags.masked will be set if the data was masked.
-    console.log("Two-way communication working!" + "\n " + data);
+ws.on('message', function(message) {
+    var request  = JSON.parse(message);
+    console.log("action: " + request.action);
+    mopidyController[request.action](request.data);
 });
-// Module dependencies
-// var express = require('express'),
-//     swig = require('swig');
 
-// Create server
-// var app = express();
-
-// Configure server
-// app.engine('html', swig.renderFile);
-// app.set('view engine', 'html');
-// app.set('views', __dirname + '/app/views');
-
-// app.use(express.static('./public'));
-
-// Routes
-// app.get('/', function(req, res){
-//     res.render('index');
-// });
-
-// Init server
-// var port = 4000;
-
-// var server = app.listen(port, function () {
-//     console.log('server listening on port', port);
-//     // Get current playlist of server
-// });
-
-// Create Mopidy
-// var Mopidy = require("mopidy");
-
-// var mopidy = new Mopidy({
-//     webSocketUrl: "ws://localhost:6680/mopidy/ws/"
-// });
-
-// Init Mopidy 
-// mopidy.on('state:online', function () {
-
-//     console.log('state online');
-
-//     // Default playlist
-//     var uri = 'spotify:user:lomejordespotifyenargentina:playlist:1K3CWZMz6B8Q3p4fcEK8UY';
-
-//     mopidy.library.lookup(uri).then(function(tracks) {
-
-//         mopidy.tracklist.clear();
-
-//         mopidy.tracklist.add(tracks);
-
-//         mopidy.playback.play();
-//     });
-// });
-
-// Init Soclet.io
-// var io = require('socket.io')(server);
-
-// io.on('connection', function (socket) {
-
-//     var player = new Player(socket, mopidy);
-// });
-
-// Player
-// function Player (socket, mopidy) {
-
-//     socket.on('search', search);
-
-//     function search (text) {
-//         mopidy.library.search( {any: [text]}, ['spotify:'] )
-//             .then(result);
-//     }
-
-//     function result (data) {
-
-//         var trackList = data[0].tracks,
-//             tracks = [];
-
-//         for( i = 0; i < trackList.length; i++){
-
-//             var track = {
-//                 name: trackList[i].name,
-//                 album: trackList[i].album.name,
-//                 uri: trackList[i].uri
-//             };
-
-//             tracks[i] = track;
-//         }
-
-//         socket.emit('result', tracks);
-//     }
-// }
+// Started playback
+mopidy.on('event:trackPlaybackStarted', function () {
+    
+    console.log('event:trackPlaybackStarted');
+    
+    mopidy.on('event:tracklistChange', function (playlist){
+        console.log("------------------------------------");
+        console.log("Playlist Changed, (Did you erase something?): " + JSON.stringify(playlist,null, 2));
+        console.log("------------------------------------");
+        
+    });
+    mopidy.playback.getCurrentTrack()
+        .done(function (track) {
+            console.log("Current Track: " + JSON.stringify(track,null, 2));
+            ws.send(JSON.stringify(track));
+        });
+    
+    mopidy.on('event:trackPlaybackEnded', function (track){
+        console.log("------------------------------------");
+        // console.log("tl_track: " + JSON.stringify(track.tl_track, null, 2));
+        // mopidy.tracklist.remove({'tlid': [track.tl_track["tlid"]]});
+        console.log("Current Index: " + mopidy.tracklist.index(track.tl_track));
+        console.log("He heliminado el track de id: " + track.tl_track["tlid"]);
+        console.log("EL titulo de la cancion era: " + track.tl_track.track.name);
+        console.log("Te suena?");
+        console.log("------------------------------------");
+    });
+    
+    setTimeout(function () {
+        console.log('hoo');
+        // mopidy.tracklist.getLength()
+        //     .done(function (length) {
+        //         console.log('length', length);
+        //     });
+        
+        // mopidy.playback.getCurrentTrack()
+        //     .done(function (track) {
+        //         console.log('track', track);
+        //     });
+    }, 2000);
+});
